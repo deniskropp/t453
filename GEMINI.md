@@ -14,6 +14,7 @@ The project utilizes a `⫻` (KickLang) prefix notation for functional modules, 
 The core research and evolving methodology are contained within `⫻contextklmxKickSpace-*.txt` files.
 - **Interactions**: When interacting with the project, refer to these files as the source of truth for the ecosystem's structural and logical design.
 - **Evolution**: Updates to the ecosystem definition or playbooks should be reflected by creating new or updating existing `⫻contextklmxKickSpace` files.
+- **Provenance note**: The primary sequence (`000`–`011`) was generated via Grok. Parallel responses, critiques, and alternate selections from Perplexity sessions are captured in the suffixed files (`-A`, `-B`, `-C`, `-000` variants). `NODE_URL_GROK` and `NODE_URL_PERPLEXITY` link to the originating shared conversations.
 - **External References**: Key external documentation and research anchors are provided in `NODE_URL_GROK` and `NODE_URL_PERPLEXITY`.
 
 ## Operational Workflow
