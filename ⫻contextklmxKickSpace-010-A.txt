@@ -1,0 +1,12 @@
+Selection: **A** — generate visual artifacts from the audit data. That is the best next step because the metrics progression table and memory evolution summary are already clean and structured, so a line chart will make the trends immediately legible and give you a polished artifact for the audited baseline [chart].
+
+## What to visualize
+
+I’ll create one multi-line chart with:
+- x-axis: cycle (1–8)
+- y-axis: metric value (0–1)
+- lines: coherence, novelty, consent, valence
+- clear legend and axis labels
+- title that describes the trend and time range
+
+That directly maps the audit table into a high-signal visual without extra noise.

@@ -1,0 +1,28 @@
+Choose **A** next: add a persistence layer with replay-from-disk and an optional snapshot path. That is the highest-leverage follow-up because your runtime already has clean append-only semantics, and persistence is the missing piece that makes the event log durable across process restarts. [amirulislamalmamun](https://amirulislamalmamun.com/practice/system-design/concepts/036-event-sourcing/)
+
+## Why A first
+
+Your current runtime is already doing the hard part: state is derived from an immutable event log, and convergence is computed from the metrics stream. Persisting that log to disk keeps the replay guarantee intact and makes auditability real rather than in-memory only. A snapshot option is also useful because long replay chains are a known scaling tradeoff in event sourcing, and snapshots let you restore state faster without changing the model. [gist.github](https://gist.github.com/haruair/330b06bfae25ae58883706b53e6ed923)
+
+## What the next patch should include
+
+I would add:
+- A small file-backed event store, preferably newline-delimited JSON for append simplicity.
+- `saveEvent(event)` and `loadEvents()` methods.
+- Optional snapshot serialization of `RuntimeState` every N cycles.
+- `bootstrapFromDisk()` that loads the latest snapshot and replays events after it.
+- A checksum or version field so `MetaDNA` and event schema evolution stay auditable.
+
+That gives you durability, restartability, and a clear migration path without adding conceptual weight. [npmjs](https://www.npmjs.com/package/node-event-sourcing?activeTab=code)
+
+## Why not B or C yet
+
+B is valuable, but the runtime is already concrete enough that persistence will give you the most immediate implementation payoff. C is useful for validation, but it is more informative after the store exists, because then the trace can be saved, replayed, and inspected across cycles. In practice, event-sourced systems usually benefit from durability first, then integration, then simulation. [medium](https://medium.com/@manish.c.ghildiyal/reactive-architecture-cqrs-and-event-sourcing-a0b5d20afed6)
+
+## Recommended next directive
+
+Proceed with:
+
+- `A) Add persistence layer + replay-from-disk demo`
+
+A good scope would be: `local filesystem`, `snapshot every 25 events`, `single aggregate`, `keep zero-dependency core`, `optional Node fs adapter`.

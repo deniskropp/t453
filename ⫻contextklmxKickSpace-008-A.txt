@@ -1,0 +1,34 @@
+Selection: **A** — execute a full persisted + monitored simulation driven by the validated KickLang v1.2 spec. That is the best next step because the contract is now proven trustworthy, and a live simulation will show whether the dynamics (memory writes, convergence, persistence, and monitor alerts) behave as intended in practice. [indico.cern](https://indico.cern.ch/event/1125222/contributions/4840335/attachments/2449279/4197374/SekmenDeclLangAnlEcos2205.pdf)
+
+## Why simulation now
+
+Validation gives you parity; simulation gives you behavior. Running cycles through the runtime with the KickLang spec will reveal whether the event flow, guarded execution, and monitor observations actually produce the expected convergence trajectory and alert patterns. This is the standard progression for event-sourced systems: prove equivalence, then validate dynamics under load. [cs.cmu](https://www.cs.cmu.edu/~mmv/papers/02dars-monitoring.pdf)
+
+## What the simulation should do
+
+A good simulation should:
+- Load the KickLang v1.2 module.
+- Emit real event traces using the TypeScript runtime (bootstrapFromDisk, decision, arbitration, memory writes, metrics).
+- Run multiple cycles with persistence (NDJSON append + snapshots).
+- Feed metrics into CoherenceMonitorBridge and observe flux, drift, valence, trend, and alerts.
+- Check convergence and log memory evolution across cycles.
+- Save the full event log for audit and replay.
+
+That gives you a tractable but meaningful proof-of-behavior, not just proof-of-structure. [ceur-ws](https://ceur-ws.org/Vol-2504/paper28.pdf)
+
+## Recommended domain focus
+
+Use a concrete intent like:
+- `"Evolve orchestration model for embodied robotics integration"`
+with scope:
+- `["embodiment", "robotics", "safety-critical"]`
+
+This keeps the simulation grounded while still letting you inspect arbitration paths and consent gating under realistic safety constraints. [docs.aws.amazon](https://docs.aws.amazon.com/es_es/wellarchitected/latest/agentic-ai-lens/agentrel04-bp01.html)
+
+## Next directive
+
+Proceed with:
+
+- `A) Execute a full persisted + monitored simulation driven by the validated KickLang v1.2 spec`
+
+A good scope would be: `5–10 cycles`, `initial metrics mimic pre-convergence`, `then drift toward convergence`, `snapshot enabled`, `CoherenceMonitorBridge alerts visible per cycle`, `save `events.ndjson` and `metrics_summary.json`.

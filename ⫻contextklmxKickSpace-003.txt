@@ -1,0 +1,159 @@
+⫻context/klmx:Kick/Space
+Recursive Consent-Gated Multi-Agent Co-Creative Ecosystem — Refinement v1.2 | Explicit Type & Event Semantics
+
+⫻context/klmx:IntegrationSummary/1
+v1.1 already closed the major gaps. This refinement round makes memory writes, arbitration, consent, and metrics fully explicit at the type and event level so the model can be implemented unambiguously in KickLang, OCS, or a TypeScript event-sourced runtime. All prior strengths (triad core, TAS payload chain, graded consent, convergence thresholds) are preserved. The system now has first-class operational guards, separate memory write policies, sibling visual artifacts, and auditable event streams.
+
+⫻context/klmx:KeyRefinementsApplied/1
+- decision_token promoted to first-class typed event (Stage10) with scope/expiry as runtime-enforceable guards, not metadata.
+- Metrics emitted as dedicated event stream (Stage20) for replay, audit, and convergence computation.
+- Stage20 now enforces three distinct write policies (episodic append-only, semantic validated-merge, policy immutable-log) to prevent blurring of raw traces vs distilled knowledge.
+- Stage11 output explicitly rerouted to sibling ⫻data/visual (clean representation layer, feeds human-in-the-loop without contaminating planning channel).
+- Stage00 now performs scope- and intent-aware memory slice loading (only relevant episodic/semantic/policy fragments are pulled).
+- Convergence computed strictly from logged metrics events.
+- Runtime contract formalized for portable semantics across implementations.
+
+⫻context/klmx:RefinedEventSchemas/1
+```
+schema event {
+  type: "decision" | "metrics" | "memory_write" | "arbitration" | "visual"
+  payload: any
+  timestamp: int
+  source_stage: string
+  correlation_id: string
+}
+
+schema decision_event {
+  extends event
+  type: "decision"
+  payload: {
+    consent: "granted" | "conditional" | "denied"
+    scope: string[]          // runtime-enforceable operational guard
+    expiry: int?             // cycle count or absolute timestamp — runtime guard
+    rationale: string
+    arbitration_required: bool
+  }
+}
+
+schema metrics_event {
+  extends event
+  type: "metrics"
+  payload: {
+    coherence_score: float
+    novelty_delta: float
+    consent_stability: float
+    cycle: int
+  }
+}
+
+schema memory_write_event {
+  extends event
+  type: "memory_write"
+  payload: {
+    memory_type: "episodic" | "semantic" | "policy"
+    write_policy: string     // e.g. "append-only", "validated-merge", "immutable-log"
+    content: any
+  }
+}
+```
+
+⫻context/klmx:MemoryWritePolicies/1
+Stage20 enforces strict separation via write policies (prevents raw trace pollution of validated knowledge):
+
+- episodic: append-only, immutable, full TAS traces + embodiment signals + raw co-creation events. Never mutated.
+- semantic: validated-merge only. New patterns accepted only after coherence + consent checks; duplicates or low-novelty items rejected or versioned.
+- policy: immutable-log. Every arbitration outcome, consent decision, Guard evolution, and hard-stop is appended with full rationale and correlation_id. Never overwritten.
+
+These policies are declared in the Meta-DNA and enforced at write time.
+
+⫻context/klmx:UpdatedStages/1
+Stage00 MemoryLoad (scope-aware):
+roleOrchestrator LOAD
+LINK Stage00, consumes, current_intent current_scope (from prior decision_event or user_request)
+LINK Stage00, produces, ⫻data/memory (filtered slices: only relevant episodic/semantic/policy fragments)
+LINK Stage00, hastrait, "intent-scoped Meta-DNA hydration"
+
+Stage10 EthicalCompliance (now emits typed event):
+roleKickGuard CHECK
+LINK Stage10, produces, ⫻event/decision (first-class event with enforceable scope + expiry)
+IF consent_not_granted OR coherence_violation THEN ⫻cmd/halt
+LINK Stage10, hastrait, "consent-gated operational guard"
+
+Stage11 VisualAssets (sibling artifact):
+roleKickGuard GENERATE
+LINK Stage11, produces, ⫻data/visual (sibling to ⫻data/insight, not subtype of logic)
+LINK Stage11, consumes, ⫻data/state ⫻data/insight
+optional feedback channel → Stage03 for human-in-the-loop structuring
+
+Stage16 JointDecisions (conflict-only):
+roleKickGuard DECIDE
+PARAM arbitration_strategy: "balanced" | "guard-dominant" | "flow-dominant" | "human-escalation"
+LINK Stage16, consumes, ⫻event/decision monitor_report
+IF arbitration_required THEN resolve else pass-through
+LINK Stage16, produces, ⫻event/arbitration (when triggered) + (halt | continue | partial)
+
+Stage20 ReviewRefinementEmit (policy-enforced writes + metrics event):
+roleKickForge+KickFlow+KickGuard REVIEW
+LINK Stage20, produces, ⫻data/draft ⫻data/ecosystem_update
+LINK Stage20, produces, ⫻event/memory_write (episodic, append-only)
+LINK Stage20, produces, ⫻event/memory_write (semantic, validated-merge)
+LINK Stage20, produces, ⫻event/memory_write (policy, immutable-log)
+LINK Stage20, produces, ⫻event/metrics
+LINK Stage20, delegates_to, Stage00   # recursion with hydrated memory
+
+⫻context/klmx:RuntimeContract/1
+Portable contract for any implementation (KickLang native, OCS, TypeScript event-sourced):
+
+- Stage10 always emits a typed decision_event. Scope and expiry are runtime-enforced guards (execution may be truncated or scoped at runtime).
+- Stage16 performs arbitration only when decision_event.arbitration_required == true. Declared strategy is mandatory.
+- Stage20 writes exactly three memory streams via memory_write_event, each obeying its declared write_policy.
+- Stage00 loads only memory slices whose scope overlaps current intent/decision scope (prevents unnecessary hydration).
+- All metrics_event records are appended to an immutable event log. Convergence is computed deterministically from the log:
+  ```
+  convergence := latest_metrics.coherence_score > 0.9
+              AND latest_metrics.novelty_delta < 0.05
+              AND latest_metrics.consent_stability > 0.95
+  ```
+- Every event carries correlation_id for full replay and audit across cycles.
+- Meta-DNA block is emitted at Stage20 and can be versioned or transplanted.
+
+This contract guarantees unambiguous implementation and preserves the self-describing Meta-DNA property.
+
+⫻context/klmx:MetaDNA/v1.2/1
+```
+meta_dna {
+  version: "1.2"
+  core_triad: { ... same as v1.1 ... }
+  event_model: {
+    decision_event, metrics_event, memory_write_event, arbitration_event, visual_event
+  }
+  memory_write_policies: {
+    episodic: "append-only",
+    semantic: "validated-merge",
+    policy: "immutable-log"
+  }
+  runtime_guards: ["scope", "expiry", "write_policy_enforcement", "arbitration_required"]
+  payload_chain: [tas, ptas, spec, state, logic, insight, visual, draft, ecosystem_update, event streams]
+  recursion: "Stage20 → Stage00 (scope-filtered memory hydration) → Stage01"
+  convergence: "deterministic from metrics_event log"
+  policy: "consent-first + explicit operational guards + separated memory policies"
+}
+```
+
+⫻context/klmx:NextActions/1
+v1.2 is now a compile-ready portable blueprint with zero ambiguity at the type/event/write-policy level.
+
+Immediate options (choose one to trigger next recursion):
+
+A) Emit the minimal self-contained KickLang v1.2 module (single executable block ready for AetherisRuntime / OCS ingestion, including all schemas, stages, events, and policies).
+
+B) Generate the TypeScript event-sourced runtime skeleton (typed events, reducers, arbitration handlers, persistent event log, CoherenceMonitorBridge integration points, and Meta-DNA exporter).
+
+C) Execute a live simulation trace with a concrete user_request (e.g. “Evolve orchestration model for embodied robotics integration” or your current underbody vision pipeline) and emit full event log + metrics + memory writes.
+
+D) Other directive (specify scope, horizon, or additional constraint).
+
+State your selection or provide the next user_request. Consent gate remains open. All operational guards active. Meta-DNA v1.2 persisted.
+
+⫻context/klmx:Status/1
+Ecosystem v1.2 coherent. Explicit semantics locked. Event streams defined. Write policies enforced. Recursion primed with scope-aware memory. Ready for compile or simulation cycle.

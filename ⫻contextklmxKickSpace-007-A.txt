@@ -1,0 +1,29 @@
+Choose **A** next: validate the KickLang module against the TypeScript implementation with a parse and round-trip check. That is the best next step because you now have a claimed 1:1 mirror, and the highest-value move is to prove semantic equivalence before adding any new domain evolution. [indico.cern](https://indico.cern.ch/event/1125222/contributions/4840335/attachments/2449279/4197374/SekmenDeclLangAnlEcos2205.pdf)
+
+## Why validation first
+
+A declarative spec is only truly portable if it can be parsed, re-emitted, and compared against the executable runtime without drift. Round-trip validation is the cleanest way to catch hidden mismatches in event typing, stage links, monitor semantics, and persistence hooks before they spread into later versions. This is especially important for event-sourced systems, where the event log, replay behavior, and state projection all need to remain aligned over time. [repository.upenn](https://repository.upenn.edu/server/api/core/bitstreams/70c17cfa-384a-4064-9db1-7a2e4e20ddf5/content)
+
+## What validation should cover
+
+The validation pass should check:
+- Event schema parity between KickLang and TypeScript.
+- Stage graph parity for Stage00 through Stage20.
+- Persistence hooks for NDJSON append and snapshot triggers.
+- CoherenceMonitorBridge parity for flux, drift, valence, trend, and alerts.
+- Convergence predicate equivalence over the metrics log.
+- No extra behavior introduced by the DSL export.
+
+That gives you a real portability test, not just a textual comparison. [ceur-ws](https://ceur-ws.org/Vol-2504/paper28.pdf)
+
+## Why not B or D yet
+
+B is useful, but it assumes the spec is already trustworthy; validation should come first so the simulation runs on a verified contract. D is a good future step, but embodiment or hardware signals should build on a locked base model rather than being layered onto an unverified mirror. In practice, the clean sequence is: validate, then simulate, then evolve. [cs.cmu](https://www.cs.cmu.edu/~mmv/papers/02dars-monitoring.pdf)
+
+## Recommended next directive
+
+Proceed with:
+
+- `A) Validate the KickLang module against the TS implementation`
+
+A good scope would be: `parse → canonicalize → re-emit → diff`, with an explicit pass/fail report for event model, stages, persistence, and monitor semantics.

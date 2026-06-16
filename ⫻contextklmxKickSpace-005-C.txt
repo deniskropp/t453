@@ -1,0 +1,39 @@
+Selection: **C** — add a lightweight CoherenceMonitorBridge that reads the persisted `metrics_event` stream for real-time drift, flux, and valence. That is the best next recursion because your runtime already persists the full event history, so the next useful layer is an observer that continuously interprets the metrics log without changing core execution semantics. [learn.microsoft](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/monitor)
+
+## Why this is the right next step
+
+You now have durability, replay, and auditability; a monitor bridge turns that into live operational awareness. In event-stream systems, metrics and runtime logs are what make the pipeline observable rather than merely persistent. A bridge pattern is also a clean fit here because it synchronizes an external observer with the runtime while keeping the source of truth unchanged. [docs.coherence](https://docs.coherence.io/manual/components/coherence-bridge)
+
+## What the bridge should do
+
+A good minimal bridge should:
+- Tail or reload the persisted `metrics_event` stream.
+- Compute rolling drift signals from `coherence_score`, `novelty_delta`, and `consent_stability`.
+- Emit warnings for constraint drift, slow convergence, or consent instability.
+- Expose a small read-only interface for dashboards or agent introspection.
+- Avoid mutating runtime state; it should remain observational only.
+
+That keeps the runtime pure while making the health of the ecosystem legible in real time. [erlang](https://www.erlang.org/doc/apps/kernel/logger_chapter.html)
+
+## Suggested contract
+
+The bridge can be extremely small:
+- Input: `events.ndjson` or an in-memory event source.
+- Output: derived monitor state like `flux`, `drift`, `valence`, `trend`, and `alert`.
+- Update mode: polling or file-watch.
+- Scope: metrics only, optionally decision and arbitration events for context.
+- Integration point: a `CoherenceMonitorBridge` class that the runtime can query, not vice versa.
+
+This is a natural complement to the existing event-sourced model because the bridge operates on the append-only log rather than introducing a second state system. [amirulislamalmamun](https://amirulislamalmamun.com/practice/system-design/concepts/036-event-sourcing/)
+
+## Why not D yet
+
+A KickLang block is useful, but the monitor bridge will sharpen the semantics of what the DSL should emit and observe. In other words, C gives you the observability layer that can then be mapped back into DSL syntax more cleanly. Once that is in place, D becomes a straightforward 1:1 declarative export. [eventmesh.apache](https://eventmesh.apache.org/docs/v1.10.0/design-document/event-handling-and-integration/workflow/)
+
+## Next directive
+
+Proceed with:
+
+- `C) Add lightweight CoherenceMonitorBridge integration`
+
+A good scope would be: `metrics-only`, `rolling window = 5 events`, `alerts on consent_stability drop below 0.9`, `drift derived from coherence slope`, `read-only adapter over NDJSON`.

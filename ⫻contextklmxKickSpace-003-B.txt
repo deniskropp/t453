@@ -1,0 +1,32 @@
+Selection: **B** — generate the TypeScript event-sourced runtime skeleton. This is the most useful next step because your v1.2 spec is already compile-ready at the semantic level, and the remaining value is in turning the contract into typed events, reducers, arbitration, and a replayable log. [event-driven](https://event-driven.io/en/type_script_node_Js_event_sourcing/)
+
+## Why B fits best
+
+Your latest refinement is already aligned with core event-sourcing principles: immutable append-only history, replayable state reconstruction, and explicit event typing. The arbiter pattern you defined for Stage16 also matches established multi-agent guidance: let agents operate normally, then escalate only when conflict resolution is actually required. A TypeScript skeleton will make the consent, scope, expiry, memory-policy, and metrics rules executable instead of just declarative. [layrs](https://layrs.me/course/hld/11-cloud-design-patterns/event-sourcing/)
+
+## What I’d generate next
+
+I would produce a minimal but complete runtime with:
+- Typed unions for `decision`, `metrics`, `memory_write`, `arbitration`, and `visual` events.
+- Reducers for state hydration, scoped memory loading, and convergence evaluation.
+- An arbitration handler that only activates when `arbitration_required === true`.
+- An append-only event store with replay and correlation_id support.
+- A Meta-DNA exporter that serializes the current runtime contract for transplantation.
+
+That directly operationalizes the portable contract you defined while preserving the distinct memory write policies and the Stage20 recursion path. [onenoughtone](https://www.onenoughtone.com/learning-path/system-design-lld/learning/event-sourcing-basics/2)
+
+## Recommended shape
+
+The cleanest implementation target is:
+- `events.ts` for schemas and discriminated unions.
+- `state.ts` for derived state and reducers.
+- `arbitration.ts` for conflict-only resolution.
+- `monitor.ts` for metrics and convergence.
+- `metaDNA.ts` for versioned export/import.
+- `runtime.ts` for stage orchestration and replay.
+
+That structure keeps the system testable and makes it easy to map onto KickLang or OCS later without losing semantics. [github](https://github.com/Brenopms/ts-event-sourcing)
+
+## Next output
+
+If you want the next artifact, I’ll emit the **TypeScript runtime skeleton** in one block, ready to paste into a repo.

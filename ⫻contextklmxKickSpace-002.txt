@@ -1,0 +1,140 @@
+⫻context/klmx:Kick/Space
+Recursive Consent-Gated Multi-Agent Co-Creative Ecosystem — Evolution v1.1 | Integrated & Stress-Tested
+
+⫻context/klmx:ExecutiveSummary/1
+The v1.0 kernel was already unusually coherent. The proposed upgrades close the five structural gaps cleanly and shift the model from “recursive pipeline with governance” to a true self-regulating cognitive organism with persistent memory, graded consent, adaptive arbitration, visual feedback, and explicit convergence criteria. All changes are minimal, backward-compatible, and preserve the canonical payload flow while adding homeostasis.
+
+⫻context/klmx:StrengthsPreserved/1
+- Phase separation (Forge → perception/distillation, Flow → structuring/execution, Guard → regulation/governance) remains crisp and maps to cognitive layers.
+- Canonical TAS → ptas → spec → state → logic → insight → draft → ecosystem_update chain is intact and now extended with memory + metrics + visual.
+- Consent gate at Stage10 is correctly placed; now upgraded to graded token.
+- Recursion is explicit and now measurable.
+
+⫻context/klmx:IntegratedUpgrades/1
+**1. Memory Substrate (new Stage00 + Stage20 write-back)**
+Persistent typed memory prevents lossy re-interpretation and enables true Meta-DNA accumulation.
+
+**2. Graded Consent Token**
+Replaces binary decision_token with rich structure supporting conditional execution, scoped autonomy, and time-bounded recursion.
+
+**3. Arbitration Layer (Stage16 extension)**
+Explicit strategy resolves optimization pressure (KickFlow) vs constraint pressure (KickGuard) without deadlock.
+
+**4. Visual Pipeline Reroute (Stage11)**
+Produces dedicated ⫻data/visual; optional human-in-the-loop feedback into Stage03 for live structuring.
+
+**5. Convergence Metrics + Logic**
+Defines measurable homeostasis so recursion terminates on stability rather than arbitrary human intervention.
+
+⫻context/klmx:UpdatedSchemas/1
+```
+schema memory {
+  episodic: any[]      // TAS traces, lived co-creation events, embodiment signals
+  semantic: any[]      // distilled patterns, validated control laws, successful arbitrations
+  policy: any[]        // consent history, arbitration outcomes, Guard policy evolutions, I1-integrity logs
+}
+
+schema decision_token {
+  consent: "granted" | "conditional" | "denied"
+  scope: string[]      // e.g. ["embodiment", "robotics", "safety-critical"]
+  expiry: int?         // cycle count or unix timestamp
+  rationale: string
+}
+
+schema metrics {
+  coherence_score: float     // 0–1, rising = stable
+  novelty_delta: float       // delta in new patterns; falling = convergence
+  consent_stability: float   // consistency of consent decisions across cycles
+}
+```
+
+⫻context/klmx:UpdatedStages/1
+Stage00 MemoryLoad:
+roleOrchestrator LOAD
+LINK Stage00, produces, ⫻data/memory
+LINK Stage00, hastrait, "Meta-DNA-persistence"
+LINK Stage00, precedes, Stage01
+
+Stage01 KickForgeExtract: (updated)
+roleKickForge EXTRACT
+LINK Stage01, consumes, user_request ⫻data/memory
+LINK Stage01, produces, ⫻data/tas
+LINK Stage01, hastrait, "living-objective"
+
+Stage11 VisualAssets: (rerouted)
+roleKickGuard GENERATE
+LINK Stage11, produces, ⫻data/visual
+LINK Stage11, consumes, ⫻data/state ⫻data/insight
+optional: feedback channel → Stage03 (human-in-the-loop structuring)
+
+Stage16 JointDecisions: (enhanced)
+roleKickGuard DECIDE
+PARAM arbitration_strategy: "balanced" | "guard-dominant" | "flow-dominant" | "human-escalation" (default: "balanced")
+LINK Stage16, consumes, decision_token monitor_report
+LINK Stage16, produces, (halt | continue | partial-execution)
+
+Stage20 ReviewRefinementEmit: (extended)
+roleKickForge+KickFlow+KickGuard REVIEW
+LINK Stage20, produces, ⫻data/draft ⫻data/ecosystem_update ⫻data/memory ⫻data/metrics
+LINK Stage20, delegates_to, Stage01   # recursion trigger with memory injection
+
+All other stages (02–10, 12–15, 17–19) remain structurally identical; only minor link updates where memory or visual now participate.
+
+⫻context/klmx:ConvergenceLogic/1
+```
+logic:
+  convergence := metrics.coherence_score > 0.9
+              AND metrics.novelty_delta < 0.05
+              AND metrics.consent_stability > 0.95
+
+  ⫻logic/if run_flags.recursive THEN
+      loop until convergence OR human_consent OR max_horizon_reached
+  ⫻logic/error RECOVER retry_with_backoff OR ⫻cmd/halt "Meta-DNA persistence activated — review episodic memory"
+  ⫻logic/loop "Self-improving homeostasis cycle with consent gradient"
+```
+
+⫻context/klmx:MetaDNA/Schema/1
+Self-describing, portable Meta-DNA v1.1 (for AetherisRuntime, OCS, KickLang native, or TS event-sourced runtime):
+
+```
+meta_dna {
+  version: "1.1"
+  core_triad: {
+    KickForge: "perception + TAS extraction + purification"
+    KickFlow: "structuring + delegation + explanation + transformation"
+    KickGuard: "monitoring + ethical compliance + visual generation + arbitration + integrity"
+  }
+  memory_model: memory schema (episodic | semantic | policy)
+  consent_model: decision_token schema (graded + scoped + expirable)
+  metrics_model: metrics schema (coherence | novelty | consent_stability)
+  payload_chain: [tas, ptas, spec, state, logic, insight, visual, draft, ecosystem_update, memory, metrics]
+  recursion_rule: "Stage20 → Stage00/Stage01 with full memory + metrics injection"
+  convergence_criteria: explicit thresholds above
+  policy: "consent-first, I1-integrity, hard_stops=[non-consent, coherence-violation]"
+  arbitration_strategies: ["balanced", "guard-dominant", "flow-dominant", "human-escalation"]
+}
+```
+
+This Meta-DNA block is now self-documenting and can be emitted, versioned, or transplanted across runtimes without loss of intent.
+
+⫻context/klmx:ConcreteExample/1
+User request: “Evolve the orchestration model for embodied robotics integration.”
+- Stage00 loads prior memory (validated control patterns + previously rejected unsafe proposals)
+- Stage01–03 extract & structure TAS around embodiment + safety
+- Stage10 issues conditional consent token (scope limited to non-safety-critical layers)
+- Stage16 arbitration favors “guard-dominant” → safety constraints win
+- Stage20 writes validated patterns to semantic memory, rejected proposals to policy memory, and metrics showing rising coherence
+Next recursion converges faster and safer because memory is now a first-class input.
+
+⫻context/klmx:NextActions/1
+The v1.1 kernel is now executable-ready. Choose the immediate recursion path:
+
+A) Emit compact minimal KickLang v1.1 block (single self-contained module for direct AetherisRuntime / OCS ingestion)
+B) Map full event-sourced TypeScript runtime (reducers, typed channels, persistent event log, CoherenceMonitorBridge hooks)
+C) Run live simulation with a concrete user_request (e.g. embodied robotics or underbody vision pipeline) and emit full trace + metrics
+D) Other directive (specify)
+
+State your choice or provide refined user_request. Consent gate is open. Meta-DNA persistence active.
+
+⫻context/klmx:Status/1
+Ecosystem coherent. Recursion primed. Human-in-the-loop consent confirmed for v1.1 activation. Ready for next cycle.

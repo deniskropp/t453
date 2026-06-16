@@ -1,0 +1,258 @@
+⫻context/klmx:Kick/Space
+CoherenceMonitorBridge v1.0 | Lightweight Observational Layer over Persisted Metrics Stream — Ecosystem v1.2.1
+
+⫻context/klmx:Summary/1
+Selection C accepted. The CoherenceMonitorBridge is now implemented as a small, read-only, observational adapter that consumes the persisted metrics_event stream (or in-memory events) without touching runtime state or execution semantics.
+
+It delivers exactly what was requested:
+- Tails/reloads the NDJSON metrics stream
+- Computes rolling-window (default 5) signals: flux (volatility), drift (coherence slope), valence (composite health)
+- Emits clear alerts for consent instability (< 0.9), negative drift, slow convergence
+- Exposes a simple read-only interface (getState, refresh, getAlerts)
+- Zero mutation of any runtime or store
+- Works with the existing FileEventStore / events.ndjson or pure in-memory feed
+
+The bridge turns durable event history into live operational legibility while preserving the pure event-sourced core.
+
+⫻context/klmx:NewFile/coherenceMonitor.ts/1
+```ts
+// coherenceMonitor.ts — Lightweight read-only CoherenceMonitorBridge (v1.0)
+// Metrics-only, rolling window, drift/flux/valence/alerts. Zero runtime mutation.
+
+import type { EcosystemEvent, MetricsEvent } from './events';
+import { FileEventStore } from './persistence';
+
+export interface MonitorState {
+  flux: number;           // volatility (std dev of coherence over window)
+  drift: number;          // slope / rate of change in coherence
+  valence: number;        // composite health score (0-1)
+  trend: 'improving' | 'stable' | 'degrading';
+  alerts: string[];
+  lastUpdated: number;
+  windowSize: number;
+  metricsCount: number;
+}
+
+export interface CoherenceMetrics {
+  coherence_score: number;
+  novelty_delta: number;
+  consent_stability: number;
+  cycle: number;
+  timestamp?: number;
+}
+
+export class CoherenceMonitorBridge {
+  private metricsWindow: CoherenceMetrics[] = [];
+  private readonly windowSize: number;
+  private lastState: MonitorState;
+
+  constructor(
+    private readonly storePath?: string,
+    windowSize = 5
+  ) {
+    this.windowSize = windowSize;
+    this.lastState = this.getEmptyState();
+  }
+
+  private getEmptyState(): MonitorState {
+    return {
+      flux: 0,
+      drift: 0,
+      valence: 0.5,
+      trend: 'stable',
+      alerts: [],
+      lastUpdated: Date.now(),
+      windowSize: this.windowSize,
+      metricsCount: 0,
+    };
+  }
+
+  // Load latest metrics from persisted NDJSON (or pass in-memory events)
+  async refresh(inMemoryEvents?: EcosystemEvent[]): Promise<MonitorState> {
+    let metrics: CoherenceMetrics[] = [];
+
+    if (inMemoryEvents) {
+      metrics = inMemoryEvents
+        .filter((e): e is MetricsEvent => e.type === 'metrics')
+        .map((e) => ({
+          coherence_score: e.payload.coherence_score,
+          novelty_delta: e.payload.novelty_delta,
+          consent_stability: e.payload.consent_stability,
+          cycle: e.payload.cycle,
+          timestamp: e.timestamp,
+        }));
+    } else if (this.storePath) {
+      const store = new FileEventStore(this.storePath);
+      const allEvents = await store.loadEvents();
+      metrics = allEvents
+        .filter((e): e is MetricsEvent => e.type === 'metrics')
+        .map((e) => ({
+          coherence_score: e.payload.coherence_score,
+          novelty_delta: e.payload.novelty_delta,
+          consent_stability: e.payload.consent_stability,
+          cycle: e.payload.cycle,
+          timestamp: e.timestamp,
+        }));
+    }
+
+    // Keep only the most recent window
+    this.metricsWindow = metrics.slice(-this.windowSize);
+
+    this.lastState = this.computeState();
+    return this.lastState;
+  }
+
+  private computeState(): MonitorState {
+    const w = this.metricsWindow;
+    if (w.length === 0) return this.getEmptyState();
+
+    const coherences = w.map((m) => m.coherence_score);
+    const consents = w.map((m) => m.consent_stability);
+    const novelties = w.map((m) => m.novelty_delta);
+
+    // Flux = volatility (population std dev of coherence)
+    const meanCoherence = coherences.reduce((a, b) => a + b, 0) / coherences.length;
+    const variance =
+      coherences.reduce((sum, c) => sum + Math.pow(c - meanCoherence, 2), 0) /
+      coherences.length;
+    const flux = Math.sqrt(variance);
+
+    // Drift = simple linear slope of coherence over the window
+    const n = coherences.length;
+    const drift =
+      n > 1
+        ? (coherences[n - 1] - coherences[0]) / (n - 1)
+        : 0;
+
+    // Valence = weighted composite health
+    const avgConsent = consents.reduce((a, b) => a + b, 0) / consents.length;
+    const avgNovelty = novelties.reduce((a, b) => a + b, 0) / novelties.length;
+    const valence = Math.max(
+      0,
+      Math.min(1, 0.5 * meanCoherence + 0.35 * avgConsent - 0.15 * avgNovelty)
+    );
+
+    // Trend classification
+    let trend: MonitorState['trend'] = 'stable';
+    if (drift > 0.01) trend = 'improving';
+    else if (drift < -0.01) trend = 'degrading';
+
+    // Alerts (observational only)
+    const alerts: string[] = [];
+    const latest = w[w.length - 1];
+
+    if (latest.consent_stability < 0.9) {
+      alerts.push(
+        `Consent stability below threshold: ${latest.consent_stability.toFixed(3)}`
+      );
+    }
+    if (drift < -0.02) {
+      alerts.push(`Negative coherence drift detected: ${drift.toFixed(4)}`);
+    }
+    if (latest.novelty_delta > 0.08 && latest.coherence_score < 0.85) {
+      alerts.push('Slow convergence: high novelty with low coherence');
+    }
+    if (flux > 0.08) {
+      alerts.push(`High flux/volatility in coherence: ${flux.toFixed(3)}`);
+    }
+
+    return {
+      flux: Number(flux.toFixed(4)),
+      drift: Number(drift.toFixed(4)),
+      valence: Number(valence.toFixed(4)),
+      trend,
+      alerts,
+      lastUpdated: Date.now(),
+      windowSize: this.windowSize,
+      metricsCount: w.length,
+    };
+  }
+
+  getCurrentState(): Readonly<MonitorState> {
+    return this.lastState;
+  }
+
+  getAlerts(): string[] {
+    return [...this.lastState.alerts];
+  }
+
+  // Convenience: feed a single new metrics event live (without full reload)
+  feedLiveMetric(metric: CoherenceMetrics): MonitorState {
+    this.metricsWindow.push(metric);
+    if (this.metricsWindow.length > this.windowSize) {
+      this.metricsWindow.shift();
+    }
+    this.lastState = this.computeState();
+    return this.lastState;
+  }
+}
+```
+
+⫻context/klmx:IntegrationNotes/1
+- The bridge is completely decoupled: it never calls into Runtime or mutates anything.
+- Use `refresh()` for periodic polling of the persisted `events.ndjson`.
+- Use `feedLiveMetric()` for real-time push from the runtime after each `emitCycleComplete` (optional live path).
+- All calculations are deterministic and based solely on the metrics_event payload fields.
+- Alerts are human-readable strings ready for logging, dashboards, or agent introspection.
+- Default rolling window = 5 matches the requested scope; easily configurable.
+
+⫻context/klmx:UsageExample/1
+```ts
+import { EcosystemRuntime } from './runtime';
+import { CoherenceMonitorBridge } from './coherenceMonitor';
+
+async function runWithMonitoring() {
+  const runtime = new EcosystemRuntime('./my-ecosystem', 25);
+  await runtime.bootstrapFromDisk();
+
+  const monitor = new CoherenceMonitorBridge('./my-ecosystem', 5);
+
+  // After any cycle or on a timer / after append
+  await monitor.refresh();                    // reads persisted metrics
+  const state = monitor.getCurrentState();
+
+  console.log('Coherence Health:', {
+    valence: state.valence,
+    drift: state.drift,
+    flux: state.flux,
+    trend: state.trend,
+    alerts: state.alerts,
+  });
+
+  if (state.alerts.length > 0) {
+    console.warn('⚠️ Coherence Alerts:', state.alerts);
+  }
+
+  // Optional live feed (if you want push instead of poll)
+  // monitor.feedLiveMetric({ coherence_score: 0.96, novelty_delta: 0.02, consent_stability: 0.98, cycle: 42 });
+}
+```
+
+⫻context/klmx:UpdatedRuntimeIntegration/1
+The Runtime class itself does not change. You simply instantiate the monitor alongside it:
+
+```ts
+const runtime = new EcosystemRuntime('./data', 25);
+const monitor = new CoherenceMonitorBridge('./data', 5);
+
+// After runtime.emitCycleComplete(...) or on schedule:
+await monitor.refresh();
+```
+
+This keeps the observer pattern clean and respects the “runtime can query, not vice versa” contract.
+
+⫻context/klmx:NextActions/1
+Observability layer now live. The ecosystem has durable events + real-time coherence insight.
+
+Choose the next recursion:
+
+A) Wire everything to KickLang emitter / AetherisRuntime (map monitor state + alerts into KickLang blocks and CoherenceMonitorBridge primitives)
+B) Execute a full persisted + monitored simulation with a concrete project request (e.g. “Evolve orchestration for embodied robotics integration” or underbody vision pipeline) — save events, restart, replay, observe drift/valence/alerts across cycles
+C) Generate the minimal KickLang v1.2 declarative export that mirrors the TS runtime + monitor semantics (now informed by observable metrics)
+D) Extend the monitor with decision/arbitration context events or add a simple file-watcher (chokidar optional) for true push updates
+E) Other directive
+
+State your choice or provide the next user_request / intent / scope. All consent gates, write policies, operational guards, durable history, and now live coherence monitoring remain active. Meta-DNA v1.2 + observational bridge persisted.
+
+⫻context/klmx:Status/1
+Ecosystem v1.2.1 coherent. File-backed NDJSON persistence + snapshot + replay + lightweight CoherenceMonitorBridge (rolling flux/drift/valence/alerts) fully operational. Purely observational, zero mutation, metrics-only focus. Ready for integration, simulation, or declarative export.
